@@ -1,0 +1,30 @@
+.header-logo{
+  height: 70px;
+  width: 70px;
+  margin-right: 10px;
+}
+
+.navbar{
+  padding-top:0px !important;
+  padding-bottom:0px !important;
+  ul li{
+    font-size: 20px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+
+.loginDropdown{
+}
+
+.loginDropdownToggle{
+  background-color: inherit !important;
+  border:none !important;
+  color:#6c757d !important;
+  padding:1px !important;
+  svg{
+    font-size: 27px;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+}
