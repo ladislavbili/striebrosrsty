@@ -28,3 +28,27 @@
     margin-bottom: auto;
   }
 }
+
+.editButton{
+  float:right;
+  margin-top:auto;
+  margin-bottom:auto;
+  cursor:pointer
+}
+
+.infoText{
+  color:#bdbdbd;
+  font-size: 13px;
+}
+
+
+.gallery-cat-image-container {
+  width: 100px;
+}
+
+
+.gallery-cat-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}

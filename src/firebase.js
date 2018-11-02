@@ -1,14 +1,8 @@
-import Rebase from 're-base';
-import firebase from 'firebase';
-
-const config = {
-  apiKey: "AIzaSyD5-VKv5lCnL10njkjFN-zkZ68W-W7nGOk",
-  authDomain: "lansystemsdbtestwork.firebaseapp.com",
-  databaseURL: "https://lansystemsdbtestwork.firebaseio.com",
-  projectId: "lansystemsdbtestwork",
-  storageBucket: "lansystemsdbtestwork.appspot.com",
-  messagingSenderId: "227698643352"
+export default {
+  apiKey: "AIzaSyBEtoMankEdsQyhtAG2gOsYtU9kkj0zR3Y",
+  authDomain: "striebrosrsty.firebaseapp.com",
+  databaseURL: "https://striebrosrsty.firebaseio.com",
+  projectId: "striebrosrsty",
+  storageBucket: "striebrosrsty.appspot.com",
+  messagingSenderId: "946125128927"
 };
-
-const app = firebase.initializeApp(config);
-export default Rebase.createClass(app.database());

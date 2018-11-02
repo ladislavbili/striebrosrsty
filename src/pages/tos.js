@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import RichTextEditor from "react-rte";
 
-class Contact extends Component {
+class TOS extends Component {
 constructor(props){
   super(props);
   this.state={
@@ -30,18 +30,18 @@ constructor(props){
         {(this.props.language==='sk'||this.props.user!==null) &&<div>
         <CardHeader>
           <span style={{cursor:'pointer'}}>
-          Kontakt
+          Podmienky objednávky
         </span>
         {this.props.user!==null &&
           <FontAwesomeIcon className="editButton" icon={faEdit}
-            onClick={()=>this.setState({editingSK:true,newContentSK:RichTextEditor.createValueFromString( this.props.content.contactSK,"html")})} />}
+            onClick={()=>this.setState({editingSK:true,newContentSK:RichTextEditor.createValueFromString( this.props.content.tosSK,"html")})} />}
         </CardHeader>
           <CardBody>
           {!this.state.editingSK && this.props.contentLoaded && <div
             className="card-text"
             dangerouslySetInnerHTML={{
-              __html: this.props.content.contactSK
-              ? this.props.content.contactSK
+              __html: this.props.content.tosSK
+              ? this.props.content.tosSK
               : "<p/>"
             }}
             />}
@@ -60,13 +60,12 @@ constructor(props){
         </div>
           <span>
             <Button color="success" onClick={()=>{
-                 rebase.updateDoc('/texts/main', {...this.props.content,contactSK:this.state.newContentSK.toString("html")}).then(()=>
-                   rebase.get('/texts/main', {
-                     context: this,
-                   }).then(content=>{this.props.setContent(content)})
-                 );
-                 this.setState({editingSK:false});
-
+                 rebase.updateDoc('/texts/main', {...this.props.content,tosSK:this.state.newContentSK.toString("html")}).then(()=>
+                 rebase.get('/texts/main', {
+                   context: this,
+                 }).then(content=>{this.props.setContent(content)})
+               );
+                 this.setState({editingSK:false})
               }}>Uložiť</Button>
             <Button color="danger" style={{marginLeft:5}} onClick={()=>this.setState({editingSK:false})}>Zrušiť</Button>
             </span>
@@ -77,18 +76,18 @@ constructor(props){
       {(this.props.language==='en'||this.props.user!==null) && <div>
         <CardHeader>
             <span style={{cursor:'pointer'}}>
-            Contact
+            Terms of service
             { this.props.user!==null &&
               <FontAwesomeIcon className="editButton" icon={faEdit}
-              onClick={()=>this.setState({editingEN:true,newContentEN:RichTextEditor.createValueFromString( this.props.content.contactEN,"html")})} />}
+              onClick={()=>this.setState({editingEN:true,newContentEN:RichTextEditor.createValueFromString( this.props.content.tosEN,"html")})} />}
         </span>
       </CardHeader>
           <CardBody>
           {!this.state.editingEN && this.props.contentLoaded && <div
             className="card-text"
             dangerouslySetInnerHTML={{
-              __html: this.props.content.contactEN
-              ? this.props.content.contactEN
+              __html: this.props.content.tosEN
+              ? this.props.content.tosEN
               : "<p/>"
             }}
             />}
@@ -107,10 +106,11 @@ constructor(props){
         </div>
           <span>
             <Button color="success" onClick={()=>{
-                 rebase.updateDoc('/texts/main', {...this.props.content,contactEN:this.state.newContentEN.toString("html")}).then(()=>
+                 rebase.updateDoc('/texts/main', {...this.props.content,tosEN:this.state.newContentEN.toString("html")}).then(()=>
                  rebase.get('/texts/main', {
                    context: this,
-                 }).then(content=>{this.props.setContent(content)}));
+                 }).then(content=>{this.props.setContent(content)})
+               );
                  this.setState({editingEN:false})
               }}>Uložiť</Button>
             <Button color="danger" style={{marginLeft:5}} onClick={()=>this.setState({editingEN:false})}>Zrušiť</Button>
@@ -129,4 +129,4 @@ const mapStateToProps = ({ reducer }) => {
   return { content, contentLoaded, language, user };
 };
 
-export default connect(mapStateToProps, { setContent })(Contact);
+export default connect(mapStateToProps, { setContent })(TOS);
