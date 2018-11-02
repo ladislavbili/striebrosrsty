@@ -38,8 +38,8 @@ class PageHeader extends Component{
 
     this.state={
       loginOpen:false,
-      login:'',
-      password:'',
+      login:'therianslovakfur@yahoo.com',
+      password:'administrator',
       error:false,
       lastLoc,
       choosingLanguage:false,
@@ -97,7 +97,6 @@ class PageHeader extends Component{
             <Dropdown isOpen={this.state.loginOpen} toggle={()=>this.setState({loginOpen:!this.state.loginOpen})} direction="down" className="loginDropdown">
               <DropdownToggle className="loginDropdownToggle"  style={{marginRight:15}}>
                 <FontAwesomeIcon style={{marginTop:5}} icon={faCog} />
-                <i className=""/>
               </DropdownToggle>
               <DropdownMenu right style={{marginTop:'5px'}}>
                 <div style={{padding:10, width:200}}>
