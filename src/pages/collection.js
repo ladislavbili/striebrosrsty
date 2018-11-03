@@ -130,6 +130,14 @@ setMainImage(url){
         </Card>
         </ModalBody>
         <ModalFooter>
+          {this.props.user!==null && <Button color="danger" onClick={()=>{
+            if (window.confirm('Si si istý?')) {
+              rebase.removeDoc('/image-collections/'+this.props.data.id).then(()=>this.props.refetch());
+              this.props.onToggle();
+            } else {
+              return;
+            }
+            }}>{this.props.language==='en'?'Delete':'Vymazať'}</Button>}
           <Button color="secondary" onClick={this.props.onToggle}>{this.props.language==='en'?'Close':'Zavrieť'}</Button>
         </ModalFooter>
       </Modal>
