@@ -38,8 +38,8 @@ class PageHeader extends Component{
 
     this.state={
       loginOpen:false,
-      login:'therianslovakfur@yahoo.com',
-      password:'administrator',
+      login:'',
+      password:'',
       error:false,
       lastLoc,
       choosingLanguage:false,
