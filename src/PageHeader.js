@@ -114,7 +114,6 @@ class PageHeader extends Component{
                     this.setState({error:false});
                     firebase.auth().signInWithEmailAndPassword(this.state.email,this.state.password).then((res)=>{
                       this.props.setUser(res);
-                      console.log(res);
                     }).catch(error=>{this.setState({error:true});console.log('error')});
                   }}>Prihlásiť</Button>
               </div>}

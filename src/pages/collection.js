@@ -119,7 +119,7 @@ setMainImage(url){
               />
             </div>
             <Button color="success" onClick={()=>{
-                 rebase.updateDoc('image-collections/'+this.props.data.id, {...this.props.content,description:this.state.newContent.toString("html"),images:this.state.images,mainImage:this.state.images})
+                 rebase.updateDoc('image-collections/'+this.props.data.id, {...this.props.content,description:this.state.newContent.toString("html"),images:this.state.images,mainImage:this.state.mainImage})
                   .then(this.props.refetch);
                  this.setState({editing:false,description:this.state.newContent.toString("html")})
               }}>Uložiť</Button>
