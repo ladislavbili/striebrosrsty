@@ -113,18 +113,21 @@ class PageHeader extends Component{
                 <Button color="primary" style={{width:'100%'}} onClick={()=>{
                     this.setState({error:false});
                     firebase.auth().signInWithEmailAndPassword(this.state.email,this.state.password).then((res)=>{
-                      this.props.setUser(res);
+                      //this.props.setUser(res);
                     }).catch(error=>{this.setState({error:true});console.log('error')});
                   }}>Prihlásiť</Button>
               </div>}
               {this.props.user!==null &&
                 <div>
-                  <Label style={{width:180, overflowX:'hidden'}}>Prihlásený ako {this.props.user.user.email}</Label>
-                <Button color="danger" style={{width:'100%'}} onClick={()=>{
-                       firebase.auth().signOut();
-                     this.props.setUser(null)}}>
-                      Odhlásiť</Button>
-                  </div>}
+                  <Label style={{width:180, overflowX:'hidden'}}>Prihlásený ako {this.props.user.email}</Label>
+                  <Button color="danger" style={{width:'100%'}} onClick={()=>{
+                         firebase.auth().signOut();
+                       //this.props.setUser(null)
+                     }}>
+                        Odhlásiť
+                  </Button>
+                </div>
+              }
               </div>
               </DropdownMenu>
             </Dropdown>

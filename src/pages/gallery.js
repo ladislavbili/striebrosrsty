@@ -1,43 +1,50 @@
 import React, {Component} from 'react';
-import {rebase} from '../index';
-import { Card, CardHeader, CardBody, Modal, ModalHeader, ModalBody, ModalFooter, Button, FormGroup, Label, Input } from 'reactstrap';
+import { Card, CardHeader, CardBody, Modal, ModalHeader, ModalBody, ModalFooter, Button, FormGroup, Label, Input, Alert } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { connect } from "react-redux";
 import RichTextEditor from "react-rte";
+import firebase from 'firebase';
+import {rebase} from '../index';
+import {resizeImage} from '../helperFunctions';
 import Collection from './collection';
 
 class Gallery extends Component {
   constructor(props){
     super(props);
     this.state={
-      collections:null,
-      collectionsLoaded:false,
+      eCollectionID:'',
+      eCollectionOrder:'',
+
+      collections:[],
       showingCollection:false,
-      showingCollectionData:null,
+      showingCollectionID:null,
 
-      addingCategory:false,
-      catName:'',
-      catNewUrl:'',
-      catURLs:[],
-      catOrder:0,
-      catMainImage:null,
-      catDescription: RichTextEditor.createValueFromString( "","html"),
+      openAdd:false,
+      nTitle:'',
+      nImages:[],
+      nMainImage:null,
+      addingCollection:false,
+      nDescription: RichTextEditor.createValueFromString( "","html"),
     }
-    this.refetch.bind(this);
 
   }
+
   componentWillMount(){
-    this.refetch();
-  }
-
-  refetch(){
-    rebase.get('/image-collections', {
-      withIds: true,
+    this.ref = rebase.listenToCollection('/image-collections', {
       context: this,
-    }).then(collections=>{this.setState({collections:collections.sort((item1,item2)=>item1.order < item2.order?1:-1),collectionsLoaded:true})}).catch(()=>this.setState({collectionsLoaded:true}));
+      withIds: true,
+      then:data=>{
+        this.setState({
+          collections:data.sort((item1,item2)=>item1.order - item2.order),
+        });
+      }
+    });
   }
 
+  componentWillUnmount(){
+    rebase.removeBinding(this.ref);
+  }
 
   render(){
     return(
@@ -50,84 +57,151 @@ class Gallery extends Component {
             {this.props.user!==null &&
               <span>
                 <FontAwesomeIcon className="editButton" icon={faPlus}  style={{cursor:'pointer'}}
-                  onClick={()=>this.setState({addingCategory:true,
-                    catNewUrl:'',
-                    catName:'',
-                    catURLs:[],
-                    catMainImage:null,
-                    catOrder:this.state.collections===null?0:this.state.collections[0].order+1,
-                    catDescription: RichTextEditor.createValueFromString( "","html")
+                  onClick={()=>this.setState(
+                    {openAdd:true,
+                    nTitle:'',
+                    nImages:[],
+                    nMainImage:null,
+                    nDescription: RichTextEditor.createValueFromString( "","html")
                   })} />
             </span>
             }
             </CardHeader>
             <CardBody>
-            {this.state.collectionsLoaded &&
               <div style={{width:'100%'}} className="row">
                 {
-                  this.state.collections.map((category)=>
-                  <Card key={category.id} body style={{maxWidth:400,marginRight:5, cursor:'pointer'}} onClick={()=>this.setState({showingCollection:true,showingCollectionData:category})}>
-                    <CardHeader>
+                  this.state.collections.map((collection)=>
+                  <Card key={collection.id} style={{maxWidth:400,marginRight:5, cursor:'pointer'}}>
+                    <CardHeader onClick={()=>this.setState({showingCollection:true,showingCollectionID:collection.id})}>
                       <span style={{cursor:'pointer'}}>
-                      {category.title}
+                      {collection.title}
                     </span>
                     </CardHeader>
-                    <CardBody>
+                    {
+                      this.props.user &&
+                      <Input className="cat-order-input" type="number" value={this.state.eCollectionID===collection.id?this.state.eCollectionOrder:collection.order}
+                        onChange={(e)=>this.setState({eCollectionOrder:e.target.value})}
+                        onFocus={()=>this.setState({eCollectionID:collection.id,eCollectionOrder:collection.order})}
+                        onBlur={()=>{
+                          let newOrder = this.state.eCollectionOrder;
+                          if(newOrder==='' || isNaN(parseInt(newOrder))||parseInt(newOrder) < 1){
+                            newOrder=1;
+                          }
+                          else if(parseInt(newOrder) > this.state.collections.length){
+                            newOrder=this.state.collections.length;
+                          }else{
+                            newOrder=parseInt(newOrder);
+                          }
+                          if(newOrder > collection.order){
+                            this.state.collections.filter((item)=>item.order<=newOrder && item.order > collection.order).forEach((item)=>{
+                              rebase.updateDoc('/image-collections/'+item.id, {order:item.order-1});
+                            })
+                          } else if(newOrder < collection.order){
+                            this.state.collections.filter((item)=>item.order >= newOrder && item.order < collection.order).forEach((item)=>{
+                              rebase.updateDoc('/image-collections/'+item.id, {order:item.order+1});
+                            })
+                          }else{
+                            return;
+                          }
+                          rebase.updateDoc('/image-collections/'+collection.id, {order:newOrder});
+                        }}
+                        />
+                    }
+                    <CardBody onClick={()=>this.setState({showingCollection:true,showingCollectionID:collection.id})}>
                       <div className="gallery-cat-image-container">
-                        <img className="gallery-cat-image" src={category.mainImage} alt={category.title} />
+                        <img className="gallery-cat-image" src={collection.images.find((item)=>item.path===collection.mainImage).miniature.url} alt={collection.title} />
                       </div>
                     </CardBody>
                   </Card>
                 )}
-              </div>}
-            {(!this.state.collectionsLoaded)&&<div> Loading...</div>}
+              </div>
           </CardBody>
           </Card>
-          <Modal isOpen={this.state.addingCategory} toggle={()=>this.setState({addingCategory:!this.state.addingCategory})}>
-            <ModalHeader toggle={()=>this.setState({addingCategory:!this.state.addingCategory})}>Pridanie kategórie</ModalHeader>
+          <Modal isOpen={this.state.openAdd}>
+            <ModalHeader toggle={()=>this.setState({openAdd:!this.state.openAdd})}>Pridanie kategórie</ModalHeader>
             <ModalBody>
               <FormGroup>
-                <Label for="catname">Názov kolekcie</Label>
-                <Input name="catname" id="catname" value={this.state.catName} onChange={(e)=>{this.setState({catName:e.target.value})}} placeholder="Názov kategórie" />
+                <Label for="nTitle">Názov kolekcie</Label>
+                <Input name="nTitle" id="nTitle" value={this.state.nTitle} onChange={(e)=>{this.setState({nTitle:e.target.value})}} placeholder="Názov kolekcie" />
               </FormGroup>
               <FormGroup>
-                <Label for="catorder">Poradie kolekcie (ktorá sa zobrazí skôr, nepotrebné meniť)</Label>
-                <Input name="catorder" type="number" id="catorder" value={this.state.catOrder} onChange={(e)=>{this.setState({catOrder:e.target.value})}} placeholder="Názov kategórie" />
+                <Label for="catNewUrl" className="btn btn-success">Upload images</Label>
+                <Input
+                  type="file"
+                  name="catNewUrl"
+                  id="catNewUrl"
+                  style={{display:'none'}}
+                  multiple={true}
+                  accept="image/x-png,image/gif,image/jpeg"
+                  onChange={(e)=>{
+                    if(e.target.files.length>0){
+                      let files = [...e.target.files];
+                      Promise.all(files.map((item)=>resizeImage(item,300,300))).then((images)=>{
+                        let newImages = images.map((image,index)=>{
+                          let time = (new Date()).getTime();
+                          return ({
+                            image:files[index],
+                            miniature:{...image,path:'col-images/'+time+'-min_'+files[index].name},
+                            path:'col-images/'+time+'-'+files[index].name
+                          });
+                        });
+                        this.setState({
+                          nImages:[...this.state.nImages,...newImages],
+                          nMainImage:this.state.nMainImage===null?newImages[0].path:this.state.nMainImage
+                        });
+                      })
+                    }
+                  }}
+                />
               </FormGroup>
-              <FormGroup>
-                <Label for="catNewUrl">Images</Label>
-                <span style={{display:'flex'}}>
-                  <Input name="catNewUrl" id="catNewUrl" value={this.state.catNewUrl} onChange={(e)=>{this.setState({catNewUrl:e.target.value})}} placeholder="Link na ďaľší obrázok" />
-                  <span style={{marginTop:'auto',marginBottom:'auto',marginLeft:5}}>
-                  <FontAwesomeIcon className="addNewURL" icon={faPlus} style={{cursor:'pointer'}}
-                    onClick={()=>{
-                      if(this.state.catNewUrl!==''){
-                        this.setState({catNewUrl:'',catURLs:[...this.state.catURLs,this.state.catNewUrl],catMainImage:this.state.catMainImage===null?this.state.catNewUrl:this.state.catMainImage})
-                      }
-                    }} />
-                </span>
-                </span>
-              </FormGroup>
-              <FormGroup>
-                <Label for="selectCategoryImage">Category image</Label>
-                <Input type="select" name="select" id="selectCategoryImage"
-                  value={this.state.catMainImage===null?undefined:this.state.catMainImage} onChange={(e)=>this.setState({catMainImage:e.target.value})}>
-                  {
-                    this.state.catURLs.map((category,index)=>
-                      <option key={index}>{category}</option>
-                  )}
-                </Input>
-                {this.state.catMainImage!==null &&
-                  <div style={{height:250,width:250}}>
-                    <img className="gallery-cat-image" src={this.state.catMainImage} alt='selected category' style={{height:'100%',width:'auto'}} />
-                  </div>
-                }
-              </FormGroup>
+              <Label for="catNewUrl">Images</Label>
+              <div  style={{width:'100%',marginLeft:10,marginRight:5}} className="row">
+                {this.state.nImages.length===0 && <Alert color="danger">No file uploaded yet!</Alert>}
+                {
+                  this.state.nImages.map((image,index)=>
+                  <Card key={image.path} body style={{maxWidth:250,minWidth:250,marginRight:5,padding:0,...(this.state.nMainImage===image.path?{border:'solid blue 1px'}:{})}}>
+                    <CardHeader>
+                      <Button color="danger"  onClick={()=>{
+                          let newImages = this.state.nImages.filter((item)=>item.path!==image.path);
+                          this.setState({
+                          nImages:newImages,
+                          nMainImage:this.state.nMainImage===image.path?(newImages.length>0?newImages[0].path:null):this.state.nMainImage
+                        })
+                      }}>Vymazať</Button>
+                    <Button color="primary" style={{marginLeft:'8%'}} onClick={()=>this.setState({nMainImage:image.path})}>Hlavný</Button>
+                    </CardHeader>
+                    <Input className="cat-order-input" type="number" value={this.state.ePath===image.path?this.state.eOrder:(index+1)}
+                      onChange={(e)=>this.setState({eOrder:e.target.value})}
+                      onFocus={()=>this.setState({ePath:image.path,eOrder:index+1})}
+                      onBlur={()=>{
+                        let newIndex = this.state.eOrder;
+                        if(newIndex==='' || isNaN(parseInt(newIndex))||parseInt(newIndex) < 1){
+                          newIndex=0;
+                        }
+                        else if(parseInt(newIndex)>this.state.nImages.length){
+                          newIndex=this.state.nImages.length-1;
+                        }else{
+                          newIndex=parseInt(newIndex)-1;
+                        }
+                        let newImages=[...this.state.nImages];
+                        newImages.splice(index,1);
+                        newImages.splice(newIndex,0,image);
+                        this.setState({nImages:newImages});
+                      }}
+                      />
+                    <CardBody style={{padding:0}}>
+                      <div className="gallery-cat-image-container" style={{marginLeft:'auto',marginRight:'auto', height:150,width:150}}>
+                        <img src={image.miniature.dataURL} alt="" className="gallery-cat-image" />
+                      </div>
+                    </CardBody>
+                  </Card>
+                )}
+              </div>
               <div style={{marginBottom:10}}>
                 <RichTextEditor
-                  value={this.state.catDescription}
+                  value={this.state.nDescription}
                   onChange={e => {
-                    this.setState({ catDescription: e });
+                    this.setState({ nDescription: e });
                   }}
                   placeholder="Zadaj info o kontakte"
                   />
@@ -135,17 +209,59 @@ class Gallery extends Component {
 
             </ModalBody>
             <ModalFooter>
-              <Button color="primary" disabled={this.state.catURLs.length===0||this.state.catMainImage===null||this.state.catName===''} onClick={()=>{
-                  let body={ title:this.state.catName,mainImage:this.state.catMainImage,description:this.state.catDescription.toString('html'), images:this.state.catURLs, order:this.state.catOrder};
-                  rebase.addToCollection('/image-collections',
-                body)
-                .then(this.refetch.bind(this));
-                this.setState({addingCategory:false})
-                }} >Pridať</Button>{' '}
-              <Button color="secondary" onClick={()=>this.setState({addingCategory:!this.state.addingCategory})}>Zrušiť</Button>
+              <Button color="primary" disabled={this.state.nImages.length===0||this.state.nMainImage===null||this.state.nTitle===''||this.state.addingCollection} onClick={()=>{
+                  this.setState({addingCollection:true});
+                let storageRef = firebase.storage().ref();
+                Promise.all(
+                  [
+                    ...this.state.nImages.map((image)=>{
+                      return storageRef.child(image.path).put(image.image)
+                    }),
+                    ...this.state.nImages.map((image)=>{
+                        return storageRef.child(image.miniature.path).put(image.miniature.image)
+                    })
+                  ]
+                ).then((resp)=>{
+                  Promise.all(
+                    [
+                      ...this.state.nImages.map((image)=>{
+                        return storageRef.child(image.path).getDownloadURL()
+                      }),
+                      ...this.state.nImages.map((image)=>{
+                          return storageRef.child(image.miniature.path).getDownloadURL()
+                      })
+                    ]
+                  ).then((urls)=>{
+                    let newImages = this.state.nImages.map((item,index)=>{
+                      return {
+                        url:urls[index],
+                        path:resp[index].metadata.fullPath,
+                        miniature:{
+                          url:urls[index + this.state.nImages.length ],
+                          path:resp[index + this.state.nImages.length ].metadata.fullPath,
+                        },
+                      };
+                    })
+                    let body={
+                      title:this.state.nTitle,
+                      mainImage:this.state.nMainImage,
+                      description:this.state.nDescription.toString('html'),
+                      images:newImages,
+                      order:1
+                    };
+                    this.state.collections.forEach((col)=>{
+                      rebase.updateDoc('image-collections/'+col.id, {order:col.order+1});
+                    });
+                    rebase.addToCollection('/image-collections',body).then((item)=>{
+                      this.setState({openAdd:false,addingCollection:false})
+                    });
+                  });
+                });
+              }} >{this.state.addingCollection?'Pridávam...':'Pridať'}</Button>{' '}
+              <Button color="secondary" onClick={()=>this.setState({openAdd:!this.state.openAdd})}>Zrušiť</Button>
             </ModalFooter>
           </Modal>
-          {this.state.showingCollection && <Collection refetch={this.refetch.bind(this)} open={this.state.showingCollection}  onToggle={()=>this.setState({showingCollection:!this.state.showingCollection})} data={this.state.showingCollectionData} />}
+          {this.state.showingCollection && <Collection open={this.state.showingCollection}  onToggle={()=>this.setState({showingCollection:!this.state.showingCollection})} data={this.state.collections.find((item)=>item.id===this.state.showingCollectionID)} collections={this.state.collections} />}
         </div>
     )
   }

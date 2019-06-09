@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {setContent} from '../redux/actions';
 import { connect } from "react-redux";
 import {rebase} from '../index';
-import { Card, CardHeader,CardTitle, CardText, CardBody, Button, FormGroup, Label, Input,
+import { Card, CardHeader,CardTitle, CardBody, Button, FormGroup, Label, Input,
   Modal,  ModalHeader,  ModalBody,  ModalFooter} from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {timestampToString} from '../helperFunctions';
@@ -66,8 +66,8 @@ constructor(props){
     }
     return(
       <div>
-      <Card body>
-        <div>
+        <Card body>
+          <div>
             {(this.props.language==='sk'||this.props.user!==null) && !this.state.editingWelcomeSK &&
               <div>
                 {
@@ -93,8 +93,7 @@ constructor(props){
               : "<p/>"}} />
             </div>
             }
-              {
-                (this.props.language==='sk'||this.props.user!==null) && this.state.editingWelcomeSK &&
+            {(this.props.language==='sk'||this.props.user!==null) && this.state.editingWelcomeSK &&
                 <div>
                   <div style={{marginBottom:10}}>
                   <RichTextEditor
@@ -119,8 +118,7 @@ constructor(props){
                 </div>
               }
 
-
-              { (this.props.language==='en'||this.props.user!==null) && this.state.editingWelcomeEN &&
+            { (this.props.language==='en'||this.props.user!==null) && this.state.editingWelcomeEN &&
                 <div>
                 <div style={{marginBottom:10}}>
                 <RichTextEditor
@@ -142,9 +140,9 @@ constructor(props){
                     }}>Uložiť</Button>
                   <Button color="danger" style={{marginLeft:5}} onClick={()=>this.setState({editingWelcomeEN:false})}>Zrušiť</Button>
                 </span>
-            </div>
-              }
-              <div>
+              </div>
+            }
+            <div>
                 {
                   this.state.windowWidth>1150 &&<div className="row">
                   <About width={this.state.windowWidth} />
@@ -155,8 +153,6 @@ constructor(props){
                   <Carousel width={this.state.windowWidth} />
                   <About width={this.state.windowWidth} />
                 </div> }
-
-
             </div>
           <CardBody>
             <Card body style={{borderWidth:0}}>
@@ -202,7 +198,7 @@ constructor(props){
                 <div>
                 {
                   this.state.newsLoaded && this.state.news.map((novinka)=>
-                  <Card style={{marginTop:15}} body>
+                  <Card style={{marginTop:15}} body key={novinka.id}>
                     <CardTitle style={{fontWeight:'normal'}}>
                       {this.props.user!==null &&
                         <FontAwesomeIcon icon={faEdit} style={{marginLeft:10}}
@@ -232,12 +228,10 @@ constructor(props){
                           }}
                           />}
                       {novinka.header} <span className="infoText ml-auto"> - {timestampToString(novinka.date)}</span></CardTitle>
-                    <CardText>
                       <div dangerouslySetInnerHTML={{
                           __html: novinka.text
                           ? novinka.text
                           : "<p/>"}} />
-                    </CardText>
                   </Card>
                   )
             }

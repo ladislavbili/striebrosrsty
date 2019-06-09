@@ -1,5 +1,9 @@
 import React, {Component} from 'react';
 import {BrowserRouter,Route} from 'react-router-dom';
+import { connect } from "react-redux";
+import firebase from 'firebase';
+import {setUser} from './redux/actions';
+
 import PageHeader from './PageHeader';
 import Gallery from './pages/gallery';
 import Home from './pages/home';
@@ -8,7 +12,19 @@ import Contact from './pages/contact';
 import FAQ from './pages/faq';
 import TermOfService from './pages/tos';
 
-export default class Navigation extends Component {
+class Navigation extends Component {
+  constructor(props){
+    super(props);
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if(user!==null){
+        this.props.setUser({email:user.email,id:user.uid});
+      }else{
+        this.props.setUser(null);
+      }
+    });
+  }
+
   render(){
     return(
       <div>
@@ -29,3 +45,8 @@ export default class Navigation extends Component {
     )
   }
 }
+const mapStateToProps = () => {
+  return { };
+};
+
+export default connect(mapStateToProps, { setUser })(Navigation);
